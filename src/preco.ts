@@ -11,3 +11,10 @@ export const valorDoIngresso =
   (precoBase: number) =>
   (tipo: TipoIngresso): number =>
     tipo === "meia" ? arredondar(precoBase / 2) : precoBase;
+
+// Fábrica: fixa o percentual e devolve uma função que soma a taxa a um valor.
+//   aplicarTaxa(0.1)(100) === 110
+export const aplicarTaxa =
+  (percentual: number) =>
+  (valor: number): number =>
+    arredondar(valor * (1 + percentual));
