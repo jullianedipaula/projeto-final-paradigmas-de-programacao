@@ -2,6 +2,8 @@
 // Cada função depende só do que recebe e devolve um valor novo.
 import type { Ingresso, Pessoa, TipoIngresso } from "./tipos.ts";
 
+const TAXA_DE_SERVICO = 0.1;
+
 // Arredonda em 2 casas decimais devolvendo número (o toFixed devolveria texto).
 const arredondar = (valor: number): number => Math.round(valor * 100) / 100;
 
@@ -32,3 +34,7 @@ export const montarIngressos = (
     return { nome: pessoa.nome, poltrona: pessoa.poltrona, tipo, valor: valorDe(tipo) };
   });
 };
+
+// Soma os ingressos com reduce e aplica a taxa de serviço de 10%.
+export const calcularTotal = (ingressos: readonly Ingresso[]): number =>
+  aplicarTaxa(TAXA_DE_SERVICO)(ingressos.reduce((soma, ingresso) => soma + ingresso.valor, 0));
