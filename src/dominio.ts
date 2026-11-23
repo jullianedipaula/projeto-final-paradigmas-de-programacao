@@ -85,6 +85,15 @@ export class Evento {
     this.#vendidas.push(...poltronas);
   }
 
+  // Devolve poltronas para a venda (usado quando o pagamento falha).
+  liberar(poltronas: number[]): void {
+    const naoVendidas = poltronas.filter((poltrona) => !this.#vendidas.includes(poltrona));
+    if (naoVendidas.length > 0) {
+      throw new DadosInvalidosErro(`poltrona não estava vendida: ${naoVendidas.join(", ")}`);
+    }
+    this.#vendidas = this.#vendidas.filter((poltrona) => !poltronas.includes(poltrona));
+  }
+
   info(): EventoInfo {
     return {
       id: this.id,
