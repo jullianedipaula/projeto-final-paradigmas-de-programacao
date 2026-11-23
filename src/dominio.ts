@@ -64,6 +64,27 @@ export class Evento {
     return this.capacidade - this.#vendidas.length;
   }
 
+  // Tudo ou nada: confere TODAS as poltronas primeiro e só depois marca.
+  reservar(poltronas: number[]): void {
+    if (!Array.isArray(poltronas) || poltronas.length === 0) {
+      throw new DadosInvalidosErro("informe ao menos uma poltrona");
+    }
+    for (const poltrona of poltronas) {
+      if (!this.#existe(poltrona)) {
+        throw new DadosInvalidosErro(`a poltrona ${poltrona} não existe (vai de 1 a ${this.capacidade})`);
+      }
+    }
+    if (new Set(poltronas).size !== poltronas.length) {
+      throw new DadosInvalidosErro("a mesma poltrona aparece mais de uma vez no pedido");
+    }
+    const ocupadas = poltronas.filter((poltrona) => this.#vendidas.includes(poltrona));
+    if (ocupadas.length > 0) {
+      throw new PoltronaOcupadaErro(`poltrona já vendida: ${ocupadas.join(", ")}`);
+    }
+    // Chegou aqui: nenhuma regra quebrou, então marca todas de uma vez.
+    this.#vendidas.push(...poltronas);
+  }
+
   info(): EventoInfo {
     return {
       id: this.id,
@@ -72,5 +93,9 @@ export class Evento {
       capacidade: this.capacidade,
       disponivel: this.disponivel,
     };
+  }
+
+  #existe(poltrona: number): boolean {
+    return Number.isInteger(poltrona) && poltrona >= 1 && poltrona <= this.capacidade;
   }
 }
