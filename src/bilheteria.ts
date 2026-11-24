@@ -3,7 +3,7 @@
 // o Node atende os outros pedidos. Por isso a ordem dos passos do `reservar` importa tanto.
 import type { Evento } from "./dominio.ts";
 import type { Pagamento } from "./pagamento.ts";
-import type { ConfigBilheteria } from "./tipos.ts";
+import type { ConfigBilheteria, EventoInfo } from "./tipos.ts";
 
 export class Bilheteria {
   // Campos privados: ninguém de fora troca os eventos, a operadora, o limite ou o contador.
@@ -16,6 +16,10 @@ export class Bilheteria {
     this.#eventos = config.eventos;
     this.#pagar = config.pagar;
     this.#limitePagamentoMs = config.limitePagamentoMs;
+  }
+
+  listarEventos(): EventoInfo[] {
+    return this.#eventos.map((evento) => evento.info());
   }
 }
 
