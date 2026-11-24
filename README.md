@@ -36,13 +36,15 @@ curl -X POST localhost:3000/reservas -H 'Content-Type: application/json' \
 
 ## Preencham (avaliado no vídeo)
 
-**Link do vídeo:** 
+**Link do vídeo:** _(a preencher)_
 
 ### Integrantes
 
 | Nome | Usuário do GitHub | Parte principal |
 | :--- | :--- | :--- |
-| | | |
+| Julliane Di Paula | [jullianedipaula](https://github.com/jullianedipaula) | regras.ts, preco.ts (funcional), README.md |
+| Felipe Souto | [FelipeSoutoo](https://github.com/FelipeSoutoo) | dominio.ts (orientado a objetos), main.ts |
+| Arthur Xavier | [ArthurXavier01](https://github.com/ArthurXavier01) | bilheteria.ts (concorrência) |
 
 ### Decisões
 
