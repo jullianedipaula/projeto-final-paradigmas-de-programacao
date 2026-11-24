@@ -1,7 +1,7 @@
 // A venda: onde a CONCORRÊNCIA aparece.
 // O Node roda o JavaScript numa linha só. Enquanto um pedido espera no `await` do pagamento,
 // o Node atende os outros pedidos. Por isso a ordem dos passos do `reservar` importa tanto.
-import { DadosInvalidosErro, NaoEncontradoErro, type Evento } from "./dominio.ts";
+import { DadosInvalidosErro, NaoEncontradoErro, PagamentoErro, type Evento } from "./dominio.ts";
 import type { Pagamento } from "./pagamento.ts";
 import { calcularTotal, montarIngressos } from "./preco.ts";
 import { direitoAMeia } from "./regras.ts";
@@ -45,7 +45,14 @@ export class Bilheteria {
     const total = calcularTotal(ingressos);
 
     // 4. Cobra. Aqui o pedido PAUSA e o Node atende os outros enquanto a operadora responde.
-    await this.#pagar(total);
+    try {
+      await this.#pagar(total);
+    } catch (erro) {
+      // Pagamento recusado: devolve as poltronas para a venda.
+      evento.liberar(poltronas);
+      const motivo = erro instanceof Error ? erro.message : String(erro);
+      throw new PagamentoErro(`pagamento não aprovado: ${motivo}`);
+    }
 
     // 5. Comprovante com um reservaId novo a cada compra.
     const reservaId = this.#proximoReservaId++;
