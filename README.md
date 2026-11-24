@@ -109,9 +109,21 @@ curl -X POST localhost:3000/reservas -H 'Content-Type: application/json' \
 
 | Cenário | Pedidos | Tempo (ms) | Vendidos | Poltrona ocupada | Falha de pagamento |
 | :--- | ---: | ---: | ---: | ---: | ---: |
-| Padrão (`main.ts`) | 200 | | | | |
+| Padrão (`main.ts`) | 200 | 367 | 90 | 100 | 10 |
 
 O bench ocupa as poltronas do evento 1: para rodar de novo, parem o `npm start` (Ctrl+C) e subam outra
 vez.
 
 O que os números mostram:
+
+- Os 200 pedidos terminaram em cerca de 0,4 s, embora cada cobrança demore 80 ms: um a um levariam
+  16 s. Enquanto um pedido espera a operadora no `await`, o Node atende os outros (concorrência).
+- Nenhuma poltrona foi vendida duas vezes: cada poltrona recebeu 2 pedidos e, no máximo, um foi
+  vendido. O segundo pedido de cada poltrona recebeu 409 **sem ser cobrado**, porque a poltrona é
+  marcada antes do pagamento.
+- Cerca de 10% dos pagamentos falharam (502), que é a `taxaDeFalha: 0.1` da operadora falsa. Essas
+  poltronas voltaram para a venda (`liberar`): no fim, `disponivel` do evento 1 era exatamente o número
+  de falhas (10).
+- Em outra rodada saíram 96 vendidos, 91 ocupados e 13 falhas: quando o pagamento do primeiro pedido
+  falha e a poltrona é liberada antes de o segundo pedido chegar, o segundo consegue comprá-la. Isso
+  mostra a devolução funcionando, e a soma vendidos + ocupados + falhas é sempre 200.
