@@ -1,9 +1,11 @@
 // A venda: onde a CONCORRÊNCIA aparece.
 // O Node roda o JavaScript numa linha só. Enquanto um pedido espera no `await` do pagamento,
 // o Node atende os outros pedidos. Por isso a ordem dos passos do `reservar` importa tanto.
-import type { Evento } from "./dominio.ts";
+import { DadosInvalidosErro, NaoEncontradoErro, type Evento } from "./dominio.ts";
 import type { Pagamento } from "./pagamento.ts";
-import type { ConfigBilheteria, EventoInfo } from "./tipos.ts";
+import { calcularTotal, montarIngressos } from "./preco.ts";
+import { direitoAMeia } from "./regras.ts";
+import type { Comprovante, ConfigBilheteria, EventoInfo, Pedido } from "./tipos.ts";
 
 export class Bilheteria {
   // Campos privados: ninguém de fora troca os eventos, a operadora, o limite ou o contador.
@@ -20,6 +22,34 @@ export class Bilheteria {
 
   listarEventos(): EventoInfo[] {
     return this.#eventos.map((evento) => evento.info());
+  }
+
+  async reservar(pedido: Pedido): Promise<Comprovante> {
+    // 1. Confere o pedido e acha o evento.
+    if (!pedido || !Array.isArray(pedido.ingressos) || pedido.ingressos.length === 0) {
+      throw new DadosInvalidosErro("o pedido precisa de ao menos um ingresso");
+    }
+    const evento = this.#eventos.find((e) => e.id === pedido.eventoId);
+    if (!evento) {
+      throw new NaoEncontradoErro(`evento ${pedido.eventoId} não existe`);
+    }
+
+    // 2. Marca as poltronas ANTES de qualquer await. Este trecho é síncrono: nenhum outro
+    //    pedido roda no meio dele, então dois pedidos nunca pegam a mesma poltrona.
+    //    Se a poltrona já tem dono, o erro sai daqui e ninguém é cobrado.
+    const poltronas = pedido.ingressos.map((pessoa) => pessoa.poltrona);
+    evento.reservar(poltronas);
+
+    // 3. Calcula o preço com as funções puras.
+    const ingressos = montarIngressos(evento.preco, pedido.ingressos, direitoAMeia);
+    const total = calcularTotal(ingressos);
+
+    // 4. Cobra. Aqui o pedido PAUSA e o Node atende os outros enquanto a operadora responde.
+    await this.#pagar(total);
+
+    // 5. Comprovante com um reservaId novo a cada compra.
+    const reservaId = this.#proximoReservaId++;
+    return { reservaId, eventoId: evento.id, ingressos, total };
   }
 }
 
